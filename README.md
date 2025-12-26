@@ -41,6 +41,7 @@ arena-json is strictly RFC 8259 compliant. It rejects invalid JSON that other li
 
 ### **1\. Parsing**
 
+```C
 \#define ARENA\_IMPLEMENTATION  
 \#include "json.h"
 
@@ -62,15 +63,18 @@ int main() {
     arena\_free(\&a);  
     return 0;  
 }
+```
 
 ### **2\. Error Handling**
 
+```C
 JsonError err \= {0};  
 JsonValue \*root \= json\_parse(\&a, bad\_json, len, \&err);
 
 if (\!root) {  
     printf("Error: %s at line %d, col %d\\n", err.msg, err.line, err.col);  
 }
+```
 
 ## **Examples**
 
@@ -82,18 +86,22 @@ The repository includes several examples demonstrating real-world usage:
 
 To build and run them:
 
+```Bash
 make all  
 ./config\_manager  
 ./api\_client  
 ./builder
+```
 
 ## **Build & Test**
 
+```Bash
 \# Run the test suite (expects test\_parsing/ folder)  
 make test
 
 \# Run the benchmark against cJSON (auto-downloads dependencies)  
 make benchmark
+```
 
 ## **Origin & Disclaimer**
 
