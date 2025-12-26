@@ -42,25 +42,25 @@ arena-json is strictly RFC 8259 compliant. It rejects invalid JSON that other li
 ### **1\. Parsing**
 
 ```C
-\#define ARENA\_IMPLEMENTATION  
-\#include "json.h"
+#define ARENA_IMPLEMENTATION  
+#include "json.h"
 
 int main() {  
-    Arena a \= {0};  
-    arena\_init(\&a);
+    Arena a = {0};  
+    arena_init(&a);
 
-    const char \*json \= "{\\"key\\": 123}";  
+    const char *json = "{"key": 123}";  
       
     // Parse (NULL for last arg ignores errors)  
-    JsonValue \*root \= json\_parse(\&a, json, strlen(json), NULL);
+    JsonValue *root = json_parse(&a, json, strlen(json), NULL);
 
     if (root) {  
-        double val \= json\_get(root, "key")-\>as.number;  
-        printf("Value: %g\\n", val);  
+        double val = json_get(root, \"key\")->as.number;  
+        printf("Value: %g\n", val);  
     }
 
     // Free everything instantly  
-    arena\_free(\&a);  
+    arena_free(&a);  
     return 0;  
 }
 ```
@@ -68,11 +68,11 @@ int main() {
 ### **2\. Error Handling**
 
 ```C
-JsonError err \= {0};  
-JsonValue \*root \= json\_parse(\&a, bad\_json, len, \&err);
+JsonError err = {0};  
+JsonValue *root = json_parse(&a, bad_json, len, &err);
 
-if (\!root) {  
-    printf("Error: %s at line %d, col %d\\n", err.msg, err.line, err.col);  
+if (!root) {  
+    printf("Error: %s at line %d, col %d\n", err.msg, err.line, err.col);  
 }
 ```
 
@@ -88,18 +88,18 @@ To build and run them:
 
 ```Bash
 make all  
-./config\_manager  
-./api\_client  
+./config_manager  
+./api_client  
 ./builder
 ```
 
 ## **Build & Test**
 
 ```Bash
-\# Run the test suite (expects test\_parsing/ folder)  
+# Run the test suite (expects test_parsing/ folder)  
 make test
 
-\# Run the benchmark against cJSON (auto-downloads dependencies)  
+# Run the benchmark against cJSON (auto-downloads dependencies)  
 make benchmark
 ```
 
