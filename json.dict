@@ -1,0 +1,77 @@
+# json.dict - libFuzzer dictionary for arena_json
+
+# --- Keywords ---
+"true"
+"false"
+"null"
+
+# --- Structural Characters ---
+"{"
+"}"
+"["
+"]"
+":"
+","
+
+# --- Common Structural Combinations ---
+"{}"
+"[]"
+"\"\":"
+","
+
+# --- Whitespace ---
+"\x09"
+"\x0A"
+"\x0D"
+" "
+
+# --- Comments (arena_json specific) ---
+"//"
+"/*"
+"*/"
+
+# --- Strings & Escapes ---
+"\"\""
+"\""
+"\\\""
+"\\\\"
+"\\/"
+"\\b"
+"\\f"
+"\\n"
+"\\r"
+"\\t"
+"\\u"
+"\\u0000"
+"\\uFFFF"
+"\\uD834\\uDD1E"
+
+# --- Number Elements ---
+"-"
+"+"
+"."
+"e"
+"E"
+"e+"
+"e-"
+"E+"
+"E-"
+
+# --- Specific Numbers & Boundaries ---
+"0"
+"-0"
+"1"
+"9"
+"1.2"
+"-1.2"
+"0.0"
+"1e100"
+"1e-100"
+"1000000"
+"9007199254740991"
+"-9007199254740991"
+
+# --- SWAR Fast-Path Triggers (8 digits) ---
+"00000000"
+"12345678"
+"99999999"

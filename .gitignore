@@ -1,0 +1,24 @@
+# Binaries
+api_client
+benchmark_bin
+builder
+config_manager
+json_tester
+features_test
+gauntlet_bin
+*.exe
+*.out
+*.o
+*.dSYM/
+
+# Benchmark dependencies (downloaded by Makefile)
+citm_catalog.json
+cJSON.c
+cJSON.h
+
+# Profiling
+perf.data
+perf.data.old
+
+# System junk
+.DS_Store
