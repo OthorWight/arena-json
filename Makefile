@@ -3,18 +3,25 @@ CFLAGS = -O3 -flto -Wall -Wextra -std=c99 -msse4.2 -mbmi
 CXX = g++
 CXXFLAGS = -O3 -flto -Wall -Wextra -Wno-missing-field-initializers -std=c++17 -msse4.2 -mbmi
 
+# --- Fuzzing & Coverage Config ---
+FUZZ_CC = clang
+FUZZ_CFLAGS = -g -O1 -fsanitize=fuzzer,address,undefined -I.
+# Coverage-specific flags
+COV_FLAGS = -fprofile-instr-generate -fcoverage-mapping
+
 # Default target: Build ALL examples
 all: config_manager api_client builder
 
 # --- Help ---
 help:
 	@echo "Available targets:"
-	@echo "  make all       - Build all examples (default)"
-	@echo "  make test      - Run the validation suite and parser tests"
-	@echo "  make benchmark - Run the performance benchmarks against cJSON and simdjson"
-	@echo "  make gauntlet  - Run the gauntlet stress tests"
-	@echo "  make fuzz      - Start the fuzzer using the dictionary and corpus"
-	@echo "  make clean     - Remove all compiled binaries and downloaded dependencies"
+	@echo "  make all        - Build all examples (default)"
+	@echo "  make test       - Run the validation suite and parser tests"
+	@echo "  make benchmark  - Run the performance benchmarks"
+	@echo "  make gauntlet   - Run the gauntlet stress tests"
+	@echo "  make fuzz       - Start the fuzzer"
+	@echo "  make coverage   - Generate HTML code coverage report from corpus"
+	@echo "  make clean      - Remove all compiled binaries and temporary files"
 
 # --- Examples ---
 config_manager: example_config_manager.c arena_json.h
@@ -52,28 +59,35 @@ gauntlet_bin: gauntlet.c cJSON.c cJSON.h citm_catalog.json arena_json.h simdjson
 	$(CXX) $(CXXFLAGS) gauntlet.c cJSON.c simdjson.cpp -o gauntlet_bin -lm
 
 # --- Fuzzing ---
-FUZZ_CC = clang
-FUZZ_CFLAGS = -g -O1 -fsanitize=fuzzer,address,undefined -I.
-
 fuzzer: fuzzer.c arena_json.h
 	$(FUZZ_CC) $(FUZZ_CFLAGS) fuzzer.c -o fuzzer
 
 fuzz: fuzzer
 	@echo "Starting fuzzer... (Press Ctrl+C to stop)"
 	mkdir -p corpus
-	./fuzzer -dict=json.dict corpus/
+	./fuzzer -dict=json.dict corpus/ corpus_errors/
 
-# Download cJSON for comparison
+# --- Coverage Analysis ---
+fuzzer_cov: fuzzer.c arena_json.h
+	$(FUZZ_CC) $(FUZZ_CFLAGS) $(COV_FLAGS) fuzzer.c -o fuzzer_cov
+
+coverage: fuzzer_cov
+	@echo "Running corpus through instrumented binary..."
+	LLVM_PROFILE_FILE="fuzzer.profraw" ./fuzzer_cov -runs=0 corpus/
+	llvm-profdata merge -sparse fuzzer.profraw -o fuzzer.profdata
+	@echo "Generating report..."
+	llvm-cov show ./fuzzer_cov -instr-profile=fuzzer.profdata -format=html -output-dir=coverage_report
+	@echo "Report generated in coverage_report/index.html"
+
+# Downloads
 cJSON.c:
 	wget -q https://raw.githubusercontent.com/DaveGamble/cJSON/master/cJSON.c
 cJSON.h:
 	wget -q https://raw.githubusercontent.com/DaveGamble/cJSON/master/cJSON.h
 
-# Download benchmark data
 citm_catalog.json:
 	wget -q https://raw.githubusercontent.com/miloyip/nativejson-benchmark/master/data/citm_catalog.json
 
-# Download simdjson
 simdjson.h:
 	wget -q https://raw.githubusercontent.com/simdjson/simdjson/master/singleheader/simdjson.h
 simdjson.cpp:
@@ -81,8 +95,8 @@ simdjson.cpp:
 
 # Cleanup
 clean:
-	rm -f benchmark_bin gauntlet_bin json_tester features_test fuzzer \
+	rm -rf benchmark_bin gauntlet_bin json_tester features_test fuzzer fuzzer_cov \
 	      config_manager api_client builder \
 	      cJSON.c cJSON.h citm_catalog.json settings.json \
 	      simdjson.h simdjson.cpp \
-	      perf.data perf.data.old *.o
+	      perf.data perf.data.old *.o *.profraw *.profdata coverage_report
