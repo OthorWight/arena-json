@@ -55,7 +55,7 @@ const char *json = "{\"user\": \"Ben\", \"tags\": [\"C\", \"Linux\"]}";
 JsonValue *root = json_parse(&a, &scratch, json, strlen(json), JSON_PARSE_STRICT, NULL);
 
 // Type-safe QoL getters  
-const char *name = json_get_string(root, "user", "Unknown");  
+const char *name = json_object_get_string(root, "user", "Unknown");  
 printf("Hello, %s!\n", name);
 ```
 

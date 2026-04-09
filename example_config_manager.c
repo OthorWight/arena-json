@@ -42,11 +42,11 @@ void write_file(const char *filename, const char *data) {
 
 // Helper to update a number if it exists, or add it if missing.
 void set_or_update_number(Arena *a, JsonValue *obj, const char *key, double val) {
-    JsonValue *existing = json_get(obj, key);
+    JsonValue *existing = json_object_get(obj, key);
     if (existing && existing->type == JSON_NUMBER) {
         existing->as.number = val; // Direct in-place update
     } else {
-        json_add_number(a, obj, key, val); // Create a new key-value pair
+        json_object_add_number(a, obj, key, val); // Create a new key-value pair
     }
 }
 
@@ -82,26 +82,26 @@ int main() {
         root = json_create_object(&a);
         
         // Add basic settings
-        json_add_string(&a, root, "app_name", "Arena App");
-        json_add_string(&a, root, "theme", "Dark");
-        json_add_bool(&a, root, "fullscreen", false);
-        json_add_number(&a, root, "volume", 85.5);
-        json_add_number(&a, root, "launch_count", 0);
+        json_object_add_string(&a, root, "app_name", "Arena App");
+        json_object_add_string(&a, root, "theme", "Dark");
+        json_object_add_bool(&a, root, "fullscreen", false);
+        json_object_add_number(&a, root, "volume", 85.5);
+        json_object_add_number(&a, root, "launch_count", 0);
 
         // Add a nested object
         JsonValue *network = json_create_object(&a);
-        json_add_string(&a, network, "host", "localhost");
-        json_add_number(&a, network, "port", 8080);
-        json_add(&a, root, "network", network);
+        json_object_add_string(&a, network, "host", "localhost");
+        json_object_add_number(&a, network, "port", 8080);
+        json_object_add(&a, root, "network", network);
     }
 
     // --- Modify Data (Business Logic) ---
     
     // 1. Read values
-    JsonValue *count_val = json_get(root, "launch_count");
+    JsonValue *count_val = json_object_get(root, "launch_count");
     double count = (count_val && count_val->type == JSON_NUMBER) ? count_val->as.number : 0;
     
-    JsonValue *name_val = json_get(root, "app_name");
+    JsonValue *name_val = json_object_get(root, "app_name");
     const char *name = (name_val && name_val->type == JSON_STRING) ? name_val->as.string : "Unknown";
 
     printf("    App Name: %s\n", name);
@@ -115,7 +115,7 @@ int main() {
 
     // --- Save Back to Disk ---
     // Serialize the JSON DOM to a string allocated in the arena
-    char *output = json_to_string(&a, root, true, false, 4, false);
+    char *output = json_serialize(&a, root, true, false, 4, false);
     
     write_file(CONFIG_FILE, output);
     printf("[*] Settings saved to %s\n", CONFIG_FILE);

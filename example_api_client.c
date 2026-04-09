@@ -49,16 +49,16 @@ int main() {
         bool active = false;
 
         if (user->type == JSON_OBJECT) {
-            JsonValue *v_id = json_get(user, "id");
+            JsonValue *v_id = json_object_get(user, "id");
             if (v_id && v_id->type == JSON_NUMBER) id = v_id->as.number;
 
-            JsonValue *v_name = json_get(user, "username");
+            JsonValue *v_name = json_object_get(user, "username");
             if (v_name && v_name->type == JSON_STRING) name = v_name->as.string;
 
-            JsonValue *v_role = json_get(user, "role");
+            JsonValue *v_role = json_object_get(user, "role");
             if (v_role && v_role->type == JSON_STRING) role = v_role->as.string;
 
-            JsonValue *v_active = json_get(user, "active");
+            JsonValue *v_active = json_object_get(user, "active");
             if (v_active && v_active->type == JSON_BOOL) active = v_active->as.boolean;
         }
 

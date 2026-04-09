@@ -213,7 +213,7 @@ int main() {
     start = get_time();
     for (int i = 0; i < write_iters; i++) {
         Arena temp_write = {0}; arena_init(&temp_write);
-        char *out = json_to_string(&temp_write, arena_root, false, false, 0, false);
+        char *out = json_serialize(&temp_write, arena_root, false, false, 0, false);
         (void)out; arena_free(&temp_write);
     }
     double arena_write_rate = (catalog_len * write_iters / 1024.0 / 1024.0) / (get_time() - start);

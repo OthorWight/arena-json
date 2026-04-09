@@ -24,7 +24,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     // Test explicit arena init and auxiliary allocator features
     Arena test_arena;
     arena_init(&test_arena);
-    void *z_ptr = arena_alloc_zero(&test_arena, 16);
+    void *z_ptr = arena_zalloc(&test_arena, 16);
     void *f_ptr = arena_alloc_fallback(&test_arena, 32);
     void *s_ptr = arena_alloc_struct(&test_arena, JsonValue);
     void *a_ptr = arena_alloc_array(&test_arena, JsonValue, 5);
@@ -92,17 +92,17 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         // 4. Test Mutation, Iterators & QoL APIs
         // These were 'red' in your report; this forces them to execute
         if (cloned->type == JSON_OBJECT) {
-            json_add_bool(&main_arena, cloned, "fuzz_bool", true);
-            json_add_number(&main_arena, cloned, "fuzz_num", 123.456);
-            json_add_string(&main_arena, cloned, "fuzz_str", "string_val");
-            json_add(&main_arena, cloned, "fuzz_obj", dummy_obj);
+            json_object_add_bool(&main_arena, cloned, "fuzz_bool", true);
+            json_object_add_number(&main_arena, cloned, "fuzz_num", 123.456);
+            json_object_add_string(&main_arena, cloned, "fuzz_str", "string_val");
+            json_object_add(&main_arena, cloned, "fuzz_obj", dummy_obj);
 
             // Getters
-            (void)json_get(cloned, "fuzz_num");
-            (void)json_get_number(cloned, "fuzz_num", 0.0);
-            (void)json_get_string(cloned, "fuzz_str", "fallback");
-            (void)json_get_bool(cloned, "fuzz_bool", false);
-            (void)json_get_case(cloned, "FUZZ_STR");
+            (void)json_object_get(cloned, "fuzz_num");
+            (void)json_object_get_number(cloned, "fuzz_num", 0.0);
+            (void)json_object_get_string(cloned, "fuzz_str", "fallback");
+            (void)json_object_get_bool(cloned, "fuzz_bool", false);
+            (void)json_object_get_case_insensitive(cloned, "FUZZ_STR");
 
             // Iterator
             JsonNode *entry;
@@ -111,14 +111,14 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
             }
 
             // Object mutations
-            json_replace_in_object(&main_arena, cloned, "fuzz_str", dummy_null);
-            JsonValue *detached = json_detach_from_object(&main_arena, cloned, "fuzz_obj");
+            json_object_replace(&main_arena, cloned, "fuzz_str", dummy_null);
+            JsonValue *detached = json_object_detach(&main_arena, cloned, "fuzz_obj");
             (void)detached;
-            json_remove_from_object(cloned, "fuzz_bool");
+            json_object_remove(cloned, "fuzz_bool");
         } else if (cloned->type == JSON_ARRAY) {
-            json_append_number(&main_arena, cloned, 789.0);
-            json_append_string(&main_arena, cloned, "fuzzed_string");
-            json_append(&main_arena, cloned, dummy_bool);
+            json_array_append_number(&main_arena, cloned, 789.0);
+            json_array_append_string(&main_arena, cloned, "fuzzed_string");
+            json_array_append(&main_arena, cloned, dummy_bool);
 
             // Iterator
             JsonNode *entry;
@@ -134,7 +134,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         }
         
         // Test pretty printing
-        char *serialized_pretty = json_to_string(&main_arena, cloned, true, false, 4, true);
+        char *serialized_pretty = json_serialize(&main_arena, cloned, true, false, 4, true);
         if (serialized_pretty) {
             size_t ser_len = strlen(serialized_pretty);
             JsonError rep_err;
@@ -143,7 +143,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         }
 
         // Test minified printing with comments (this triggers `comment_requires_newline`)
-        char *serialized_min = json_to_string(&main_arena, cloned, false, false, 0, true);
+        char *serialized_min = json_serialize(&main_arena, cloned, false, false, 0, true);
         if (serialized_min) {
             size_t ser_len = strlen(serialized_min);
             JsonError rep_err;

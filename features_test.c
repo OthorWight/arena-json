@@ -16,16 +16,16 @@ void test_builder_api(Arena *a) {
 
     // --- Arena JSON Builder ---
     JsonValue *a_root = json_create_object(a);
-    json_add_string(a, a_root, "project", "Arena JSON");
-    json_add_number(a, a_root, "version", 1.2);
+    json_object_add_string(a, a_root, "project", "Arena JSON");
+    json_object_add_number(a, a_root, "version", 1.2);
     
     JsonValue *a_arr = json_create_array(a);
-    json_append_number(a, a_arr, 10);
-    json_append_number(a, a_arr, 20);
+    json_array_append_number(a, a_arr, 10);
+    json_array_append_number(a, a_arr, 20);
     
-    json_add(a, a_root, "data", a_arr); 
+    json_object_add(a, a_root, "data", a_arr); 
 
-    char *a_out = json_to_string(a, a_root, false, false, 0, false);
+    char *a_out = json_serialize(a, a_root, false, false, 0, false);
 
     // --- cJSON Builder ---
     cJSON *c_root = cJSON_CreateObject();
@@ -51,10 +51,10 @@ void test_qol_features(Arena *a) {
     const char *src = "{\"User\": \"Benjamín\", \"Score\": 95}";
     JsonValue *root = json_parse(a, a, src, strlen(src), JSON_PARSE_STRICT, NULL);
 
-    TEST_ASSERT(strcmp(json_get_string(root, "User", ""), "Benjamín") == 0, "json_get_string failed");
+    TEST_ASSERT(strcmp(json_object_get_string(root, "User", ""), "Benjamín") == 0, "json_object_get_string failed");
     
-    JsonValue *found = json_get_case(root, "user");
-    TEST_ASSERT(found != NULL, "json_get_case failed to find 'User' via 'user'");
+    JsonValue *found = json_object_get_case_insensitive(root, "user");
+    TEST_ASSERT(found != NULL, "json_object_get_case_insensitive failed to find 'User' via 'user'");
     
     printf("  ✅ QoL features confirmed.\n\n");
 }
@@ -62,27 +62,27 @@ void test_qol_features(Arena *a) {
 void test_mutations(Arena *a) {
     printf("[3] TESTING MUTATIONS (REMOVE/CLONE/REPLACE/DETACH)\n");
     JsonValue *root = json_create_object(a);
-    json_add_number(a, root, "a", 1);
-    json_add_number(a, root, "b", 2);
-    json_add_string(a, root, "status", "offline");
+    json_object_add_number(a, root, "a", 1);
+    json_object_add_number(a, root, "b", 2);
+    json_object_add_string(a, root, "status", "offline");
 
     // Test Remove
-    json_remove_from_object(root, "b");
-    TEST_ASSERT(json_get(root, "b") == NULL, "Key 'b' still exists after removal");
+    json_object_remove(root, "b");
+    TEST_ASSERT(json_object_get(root, "b") == NULL, "Key 'b' still exists after removal");
 
     // Test Replace
     JsonValue *new_status = json_create_string(a, "online");
-    json_replace_in_object(a, root, "status", new_status);
-    TEST_ASSERT(strcmp(json_get_string(root, "status", ""), "online") == 0, "Replace failed");
+    json_object_replace(a, root, "status", new_status);
+    TEST_ASSERT(strcmp(json_object_get_string(root, "status", ""), "online") == 0, "Replace failed");
 
     // Test Detach
-    JsonValue *detached = json_detach_from_object(a, root, "a");
+    JsonValue *detached = json_object_detach(a, root, "a");
     TEST_ASSERT(detached != NULL && detached->as.number == 1, "Detach value mismatch");
-    TEST_ASSERT(json_get(root, "a") == NULL, "Detached key still in parent");
+    TEST_ASSERT(json_object_get(root, "a") == NULL, "Detached key still in parent");
 
     // Test Clone
     JsonValue *cloned = json_clone(a, root);
-    TEST_ASSERT(strcmp(json_get_string(cloned, "status", ""), "online") == 0, "Clone failed");
+    TEST_ASSERT(strcmp(json_object_get_string(cloned, "status", ""), "online") == 0, "Clone failed");
     
     printf("  ✅ All mutations and cloning confirmed.\n\n");
 }
@@ -90,9 +90,9 @@ void test_mutations(Arena *a) {
 void test_iteration_macros(Arena *a) {
     printf("[4] TESTING ITERATION MACROS\n");
     JsonValue *obj = json_create_object(a);
-    json_add_number(a, obj, "val1", 100);
-    json_add_number(a, obj, "val2", 200);
-    json_add_number(a, obj, "val3", 300);
+    json_object_add_number(a, obj, "val1", 100);
+    json_object_add_number(a, obj, "val2", 200);
+    json_object_add_number(a, obj, "val3", 300);
 
     double sum = 0;
     JsonNode *entry;
@@ -148,7 +148,7 @@ void test_round_trip(Arena *a) {
     JsonValue *root1 = json_parse(a, a, src, strlen(src), JSON_PARSE_STRICT, &err);
     TEST_ASSERT(root1 != NULL, "Initial parse failed");
 
-    char *out1 = json_to_string(a, root1, false, false, 0, false);
+    char *out1 = json_serialize(a, root1, false, false, 0, false);
     JsonValue *root2 = json_parse(a, a, out1, strlen(out1), JSON_PARSE_STRICT, &err);
     TEST_ASSERT(root2 != NULL, "Second parse failed");
 
